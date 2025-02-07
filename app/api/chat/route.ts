@@ -129,14 +129,6 @@ async function isValidImageUrl(url: string): Promise<boolean> {
     }
 }
 
-// Error class for disabled features
-class FeatureDisabledError extends Error {
-    constructor(feature: string) {
-        super(getFeatureMessage(feature));
-        this.name = 'FeatureDisabledError';
-    }
-}
-
 // Main route handler
 export async function POST(req: Request) {
     const { messages, model, group } = await req.json();
@@ -146,14 +138,26 @@ export async function POST(req: Request) {
     if (model.startsWith('xai:') && !process.env.XAI_API_KEY) {
         throw new Error('XAI_API_KEY is required for Grok models');
     }
-    if (model.startsWith('openai:') && !process.env.OPENAI_API_KEY) {
-        throw new Error('OPENAI_API_KEY is required for GPT models');
-    }
 
     // Filter out disabled tools and ensure they match available tools
     const enabledTools = activeTools
         .filter((tool): tool is string => isToolEnabled(tool))
         .filter((tool): tool is ToolName => AVAILABLE_TOOLS.includes(tool as ToolName));
+
+    // If no tools are enabled, fall back to simple streaming chat
+    if (enabledTools.length === 0) {
+        const result = streamText({
+            model: xai(model),
+            messages: convertToCoreMessages(messages),
+            experimental_transform: smoothStream({
+                chunking: 'word',
+                delayInMs: 15,
+            }),
+            temperature: 0,
+            system: systemPrompt,
+        });
+        return result.toDataStreamResponse();
+    }
 
     const result = streamText({
         model: xai(model),
@@ -176,7 +180,7 @@ export async function POST(req: Request) {
                 }),
                 execute: async ({ code, title, icon }) => {
                     if (!featureConfig.codeInterpreter.enabled) {
-                        throw new FeatureDisabledError('codeInterpreter');
+                        return { message: 'Code interpreter is currently disabled.', chart: '' };
                     }
 
                     const sandbox = await CodeInterpreter.create(serverEnv.SANDBOX_TEMPLATE_ID!);
@@ -217,7 +221,7 @@ export async function POST(req: Request) {
                 }),
                 execute: async ({ from, to }) => {
                     if (!featureConfig.codeInterpreter.enabled) {
-                        throw new FeatureDisabledError('codeInterpreter');
+                        return { rate: 'Currency converter is currently disabled.' };
                     }
 
                     const code = `
@@ -266,7 +270,7 @@ latest_rate
                 }),
                 execute: async ({ queries, maxResults, topics, searchDepth, exclude_domains }) => {
                     if (!featureConfig.webSearch.enabled) {
-                        throw new FeatureDisabledError('webSearch');
+                        return { searches: [] };
                     }
 
                     const apiKey = serverEnv.TAVILY_API_KEY;
@@ -342,7 +346,7 @@ latest_rate
                 }),
                 execute: async ({ query, startDate, endDate }) => {
                     if (!featureConfig.xSearch.enabled) {
-                        throw new FeatureDisabledError('xSearch');
+                        return { results: [] };
                     }
 
                     try {
@@ -381,7 +385,7 @@ latest_rate
                         return processedResults;
                     } catch (error) {
                         console.error('X search error:', error);
-                        throw error;
+                        return { results: [] };
                     }
                 },
             }),
@@ -394,7 +398,7 @@ latest_rate
                 }),
                 execute: async ({ query }) => {
                     if (!featureConfig.movies.enabled) {
-                        throw new FeatureDisabledError('movies');
+                        return { result: null };
                     }
 
                     const TMDB_API_KEY = serverEnv.TMDB_API_KEY;
@@ -461,7 +465,7 @@ latest_rate
                         return { result };
                     } catch (error) {
                         console.error('TMDB search error:', error);
-                        throw error;
+                        return { result: null };
                     }
                 },
             }),
@@ -472,7 +476,7 @@ latest_rate
                 parameters: z.object({}),
                 execute: async () => {
                     if (!featureConfig.movies.enabled) {
-                        throw new FeatureDisabledError('movies');
+                        return { results: [] };
                     }
 
                     const TMDB_API_KEY = serverEnv.TMDB_API_KEY;
@@ -496,7 +500,7 @@ latest_rate
                         return { results };
                     } catch (error) {
                         console.error('Trending movies error:', error);
-                        throw error;
+                        return { results: [] };
                     }
                 },
             }),
@@ -507,7 +511,7 @@ latest_rate
                 parameters: z.object({}),
                 execute: async () => {
                     if (!featureConfig.movies.enabled) {
-                        throw new FeatureDisabledError('movies');
+                        return { results: [] };
                     }
 
                     const TMDB_API_KEY = serverEnv.TMDB_API_KEY;
@@ -531,7 +535,7 @@ latest_rate
                         return { results };
                     } catch (error) {
                         console.error('Trending TV shows error:', error);
-                        throw error;
+                        return { results: [] };
                     }
                 },
             }),
@@ -545,7 +549,7 @@ latest_rate
                 }),
                 execute: async ({ query, no_of_results }) => {
                     if (!featureConfig.youtube.enabled) {
-                        throw new FeatureDisabledError('youtube');
+                        return { results: [] };
                     }
 
                     try {
@@ -610,7 +614,7 @@ latest_rate
                         };
                     } catch (error) {
                         console.error('YouTube search error:', error);
-                        throw error;
+                        return { results: [] };
                     }
                 },
             }),
@@ -623,7 +627,7 @@ latest_rate
                 }),
                 execute: async ({ query }) => {
                     if (!featureConfig.xSearch.enabled) {
-                        throw new FeatureDisabledError('xSearch');
+                        return { results: [] };
                     }
 
                     try {
@@ -660,7 +664,7 @@ latest_rate
                         };
                     } catch (error) {
                         console.error('Academic search error:', error);
-                        throw error;
+                        return { results: [] };
                     }
                 },
             }),
@@ -673,7 +677,7 @@ latest_rate
                 }),
                 execute: async ({ url }) => {
                     if (!featureConfig.webRetrieval.enabled) {
-                        throw new FeatureDisabledError('webRetrieval');
+                        return { error: 'Web retrieval is currently disabled.' };
                     }
 
                     const app = new FirecrawlApp({
@@ -711,7 +715,7 @@ latest_rate
                 }),
                 execute: async ({ lat, lon }) => {
                     if (!featureConfig.weather.enabled) {
-                        throw new FeatureDisabledError('weather');
+                        return { error: 'Weather data is currently disabled.' };
                     }
 
                     const apiKey = serverEnv.OPENWEATHER_API_KEY;
