@@ -1,5 +1,3 @@
-explain this code
-
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import 'katex/dist/katex.min.css';
