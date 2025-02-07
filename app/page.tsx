@@ -1,3 +1,5 @@
+explain this code
+
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import 'katex/dist/katex.min.css';
@@ -1337,16 +1339,28 @@ Grok 2 models are now available for you to try out.
                 supports-[backdrop-filter]:bg-white/30 supports-[backdrop-filter]:dark:bg-neutral-950/30
                 font-sans">
                 <div className="flex items-center gap-4">
+                    <Link href="/new">
+                        <Button
+                            type="button"
+                            variant={'secondary'}
+                            className="rounded-full bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm group transition-all hover:scale-105 pointer-events-auto"
+                        >
+                            <Plus size={18} className="group-hover:rotate-90 transition-all" />
+                            <span className="text-sm ml-2 group-hover:block hidden animate-in fade-in duration-300">
+                                New
+                            </span>
+                        </Button>
+                    </Link>
+                </div>
+                <div className='flex items-center space-x-4'>
                     <Link
-                        target="_blank"
-                        href="https://railway.com/template/XJFOmx?referralCode=gKALTQ"
-                        className="transition-opacity hover:opacity-90"
+                      target="_blank"
+                      href="https://railway.com/template/XJFOmx?referralCode=gKALTQ"
+                      className="flex items-center py-1.5 px-2 rounded-md 
+                        bg-white/70 hover:bg-white/90 dark:bg-neutral-800/70 dark:hover:bg-neutral-800/90
+                        backdrop-blur-sm shadow-sm transition-all duration-200"
                     >
-                        <img 
-                            src="https://railway.app/button.svg" 
-                            alt="Deploy on Railway" 
-                            className="h-8" 
-                        />
+                      <img src="https://railway.app/button.svg" alt="Deploy on Railway" className="h-6" />
                     </Link>
                     <AboutButton />
                     <ThemeToggle />
