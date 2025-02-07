@@ -1337,31 +1337,16 @@ Grok 2 models are now available for you to try out.
                 supports-[backdrop-filter]:bg-white/30 supports-[backdrop-filter]:dark:bg-neutral-950/30
                 font-sans">
                 <div className="flex items-center gap-4">
-                    <Link href="/new">
-                        <Button
-                            type="button"
-                            variant={'secondary'}
-                            className="rounded-full bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm group transition-all hover:scale-105 pointer-events-auto"
-                        >
-                            <Plus size={18} className="group-hover:rotate-90 transition-all" />
-                            <span className="text-sm ml-2 group-hover:block hidden animate-in fade-in duration-300">
-                                New
-                            </span>
-                        </Button>
-                    </Link>
-                </div>
-                <div className='flex items-center space-x-4'>
                     <Link
                         target="_blank"
                         href="https://railway.com/template/XJFOmx?referralCode=gKALTQ"
-                        className="flex flex-row gap-2 items-center py-1.5 px-2 rounded-md 
-                            bg-white/70 hover:bg-white/90 dark:bg-neutral-800/70 dark:hover:bg-neutral-800/90
-                            backdrop-blur-sm text-neutral-950 dark:text-zinc-50 shadow-sm text-sm
-                            transition-all duration-200"
+                        className="transition-opacity hover:opacity-90"
                     >
-                        <img src="https://railway.app/button.svg" alt="Deploy on Railway" className="h-4" />
-                        <span className='hidden sm:block'>Deploy on Railway</span>
-                        <span className='sm:hidden block'>Deploy</span>
+                        <img 
+                            src="https://railway.app/button.svg" 
+                            alt="Deploy on Railway" 
+                            className="h-8" 
+                        />
                     </Link>
                     <AboutButton />
                     <ThemeToggle />
